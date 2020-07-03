@@ -29,11 +29,31 @@
 typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>
     PCLHandler;
 #include <math.h>
+#include <pcl/ModelCoefficients.h>
 #include <pcl/features/moment_of_inertia_estimation.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/filters/approximate_voxel_grid.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/octree/octree.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
+#include <pcl/registration/ndt.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/search/search.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/segmentation/min_cut_segmentation.h>
+#include <pcl/segmentation/region_growing.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/visualization/pcl_visualizer.h>
 
+#include <DBSCAN/DBSCAN.hpp>
 #include <Eigen/Core>
 #include <ctime>
 #include <fstream>
@@ -44,7 +64,6 @@ typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>
 
 #include "bpmsg/arm_state.h"
 #include "bpmsg/pose.h"
-
 // #include "template_match/pose.h"
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
@@ -65,20 +84,21 @@ class FeatureCloud {
   ~FeatureCloud() {}
 
   // Process the given cloud
-  void setInputCloud(PointCloud::Ptr xyz) {
+  void setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr xyz) {
     xyz_ = xyz;
     processInput();
   }
 
   // Load and process the cloud in the given PCD file
   void loadInputCloud(const std::string &pcd_file) {
-    xyz_ = PointCloud::Ptr(new PointCloud);
+    xyz_ =
+        pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::io::loadPCDFile(pcd_file, *xyz_);
     processInput();
   }
 
   // Get a pointer to the cloud 3D points
-  PointCloud::Ptr getPointCloud() const { return (xyz_); }
+  pcl::PointCloud<pcl::PointXYZ>::Ptr getPointCloud() const { return (xyz_); }
 
   // Get a pointer to the cloud of 3D surface normals
   SurfaceNormals::Ptr getSurfaceNormals() const { return (normals_); }
@@ -119,7 +139,7 @@ class FeatureCloud {
 
  private:
   // Point cloud data
-  PointCloud::Ptr xyz_;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_;
   SurfaceNormals::Ptr normals_;
   LocalFeatures::Ptr features_;
   SearchMethod::Ptr search_method_xyz_;
@@ -229,14 +249,14 @@ class template_match {
   double min_x, min_y, min_z, max_x, max_y, max_z;
   double model_size, voxel_grid_size;
   int object_index = 0;
-  double theta, dx, dy, dz,side_min,side_max;
+  double theta, dx, dy, dz, side_min, side_max;
   int arm_state;
   int max_num, min_num;
   int object_num = 0;
   int com_flag = 0;
   int pick_index;
   bool view_on;
-  bool simulation, vision_simulation;
+  bool simulation, vision_simulation, save_filter;
   clock_t start, end;
   string model_file_, model_file_2, model_file_1;
   Eigen::Vector3f euler_angles;
@@ -253,8 +273,8 @@ class template_match {
   ros::Subscriber arm_sub;
   ros::Publisher trans_pub;
   bpmsg::pose result_pose;
-  PointCloud::Ptr model_pipe;
-  PointCloud::Ptr model_cylinder;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr model_pipe;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr model_cylinder;
 
   // pcl::PointCloud<PointT>::Ptr cloud_;
   map<int, double> height_map;
@@ -273,8 +293,10 @@ class template_match {
   void match(pcl::PointCloud<pcl::PointXYZ>::Ptr goal,
              pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2,
              pcl::PointCloud<pcl::PointXYZ>::Ptr model, int index);
-  void cluster(pcl::PointCloud<PointT>::Ptr cloud_,
-               pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2);
+  void kmeans_cluster(pcl::PointCloud<PointT>::Ptr cloud_,
+                      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2);
+  void dbscan_cluster(pcl::PointCloud<PointT>::Ptr cloud_,
+                      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2);
   void commandCB(const std_msgs::Int8 &msg);
   pcl::PointCloud<pcl::PointXYZ>::Ptr transclouds(
       pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, double theta, double dx,
@@ -282,5 +304,13 @@ class template_match {
   Eigen::Matrix4f icp(pcl::PointCloud<PointT>::Ptr cloud_in,
                       pcl::PointCloud<PointT>::Ptr cloud_out);
   void box(pcl::PointCloud<PointT>::Ptr cloud);
+  void ndt_match(pcl::PointCloud<pcl::PointXYZ>::Ptr goal,
+                 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2,
+                 pcl::PointCloud<pcl::PointXYZ>::Ptr model, int index);
+  void area_division(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr planar_segmentation(
+      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+  void viewerOneOff(pcl::visualization::PCLVisualizer &viewer, double x,
+                    double y, double z, string name);
 };
 #endif

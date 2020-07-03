@@ -5,11 +5,11 @@
 	<!-- green -->
 	<param name="min_y"  type="double" value="-0.118"/>
 	<!-- blue -->
-	<param name="min_z"  type="double" value="0.55"/>
+	<param name="min_z"  type="double" value="0.50"/>
 	<param name="max_x"  type="double" value="0.118"/>
 	<param name="max_y"  type="double" value="0.072"/>
 	<param name="max_z"  type="double" value="0.6"/>
-	<param name="model_size"  type="double" value="0.005"/>
+	<param name="model_size"  type="double" value="0.003"/>
 	<param name="theta"  type="double" value="0.49"/>
 	<param name="dx"  type="double" value="0"/>
 	<param name="dy"  type="double" value="0"/>
@@ -17,15 +17,16 @@
 	<param name="side_min"  type="double" value="-0.072"/>
 	<param name="side_max"  type="double" value="0.0792"/>
 	<param name="max_num"  type="int" value="20000"/>
-	<param name="min_num"  type="int" value="80"/>
-	<param name="view_on"  type="bool" value="0"/>
-	<param name="vision_simulation"  type="bool" value="0"/>
+	<param name="min_num"  type="int" value="100"/>
+	<param name="view_on"  type="bool" value="1"/>
+	<param name="vision_simulation"  type="bool" value="1"/>
+	<param name="save_filter"  type="bool" value="1"/>
 	<param name="simulation"  type="bool" value="1"/>
 	<param name="model_file_"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/real_threepipe1091.pcd"/>
 	<param name="model_file_1"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/project837.pcd"/>
 	<param name="model_file_2"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/cylinder.pcd"/>
 	</node>
-	<!-- <node pkg="template_match" type="output_clouds" name="output_clouds" output="screen">
-	<param name="file_location"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/twp2.pcd"/>
-	</node> -->
+	<node pkg="template_match" type="output_clouds" name="output_clouds" output="screen">
+	<param name="file_location"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/dense_3.pcd"/>
+	</node>
 </launch>

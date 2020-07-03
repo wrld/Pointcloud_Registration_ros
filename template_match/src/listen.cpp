@@ -1,7 +1,6 @@
-#include "template_match.hpp"
+#include "template_match/template_match.hpp"
 
 int main(int argc, char **argv) {
-
   ros::init(argc, argv, "template_match");
 
   template_match match;

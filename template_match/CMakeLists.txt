@@ -26,8 +26,7 @@ bpmsg
 # link_directories(${PCL_LIBRARY_DIRS})
 # add_definitions(${PCL_DEFINITIONS})
  catkin_package(
-    INCLUDE_DIRS
-   # include
+    INCLUDE_DIRS include
     CATKIN_DEPENDS roscpp
                    pcl_conversions
                    pcl_ros
@@ -50,9 +49,12 @@ include_directories(
 
 add_executable(output_clouds src/output.cpp)
 target_link_libraries(output_clouds ${catkin_LIBRARIES})
+# add_executable(dbscan src/DBSCAN.cpp)
+# target_link_libraries(dbscan ${catkin_LIBRARIES})
+
 # target_link_libraries (output_clouds libvtkCommonCore-8.2.so.1 libvtkRenderingOpenGL2-8.2.so.1 )
 #add_dependencies(template_match ${catkin_EXPORTED_TARGETS})
-add_executable(template_match src/listen.cpp src/template_match.cpp)
+add_executable(template_match src/listen.cpp src/template_match.cpp src/DBSCAN.cpp)
 target_link_libraries(template_match ${catkin_LIBRARIES})
 # target_link_libraries (template_match libvtkCommonCore-8.2.so.1 libvtkRenderingOpenGL2-8.2.so.1)
 # target_link_libraries(template_match ${VTK_LIBRARIES} ${PCL_LIBRARIES})
