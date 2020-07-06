@@ -9,6 +9,11 @@
 	<param name="max_x"  type="double" value="0.12"/>
 	<param name="max_y"  type="double" value="0.07"/>
 	<param name="max_z"  type="double" value="0.75"/>
+	<param name="min_sample_distance"  type="double" value="0.001"/>
+	<param name="max_correspondence_distance"  type="double" value="0.005"/>
+	<param name="nr_iterations"  type="double" value="1500"/>
+	<param name="normal_radius_"  type="double" value="0.01"/>
+	<param name="feature_radius_"  type="double" value="0.01"/>
 	<param name="model_size"  type="double" value="0.005"/>
 	<param name="theta"  type="double" value="0.49"/>
 	<param name="dx"  type="double" value="0"/>
@@ -26,11 +31,12 @@
 	<param name="model_file_"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/real_threepipe1091.pcd"/>
 	<param name="model_file_1"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/project837.pcd"/>
 	<param name="model_file_2"  type="string" value="/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/cylinder.pcd"/>
+	
 	</node>
-	<node pkg="template_match" type="output_clouds" name="output_clouds" output="screen">
+	<!-- <node pkg="template_match" type="output_clouds" name="output_clouds" output="screen">
+	<param name="file_location"  type="string" value="/media/gjx/GJX/DL_dataset/pointclouds/0064_cloud.pcd"/>
+	</node> -->
+	<!-- <node pkg="template_match" type="dbscan" name="dbscan" output="screen">
 	<param name="file_location"  type="string" value="/media/gjx/GJX/DL_dataset/pointclouds/0065_cloud.pcd"/>
-	</node>
-	<node pkg="template_match" type="dbscan" name="dbscan" output="screen">
-	<param name="file_location"  type="string" value="/media/gjx/GJX/DL_dataset/pointclouds/0065_cloud.pcd"/>
-	</node>
+	</node> -->
 </launch>

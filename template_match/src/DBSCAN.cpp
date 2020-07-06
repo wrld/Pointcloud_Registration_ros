@@ -21,6 +21,7 @@ void showCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud1,
   };
 }
 void DBSCAN::start_scan() {
+  start = clock();
   select_kernel();
   find_independent();
 }
@@ -98,7 +99,7 @@ void DBSCAN::find_independent() {
       }
     }
   }
-  for (int i = 0; i < bound_points.size(); i++) {
+  for (int i = 0; i < bound_points.size() && use_edge; i++) {
     int max_intersect = 0;
     int max_index = -1;
     for (int j = 0; j < core_points.size(); j++) {
@@ -121,8 +122,10 @@ void DBSCAN::find_independent() {
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr result_cloud(
       new pcl::PointCloud<pcl::PointXYZRGB>);
   for (auto i = 0; i < core_points.size(); i++) {
-    if (neighbourPoints[core_points[i]].size() == 0) continue;
-    cout << "find_cluster" << endl;
+    if (neighbourPoints[core_points[i]].size() == 0 ||
+        neighbourPoints[core_points[i]].size() < 200)
+      continue;
+    cout << "find_cluster" << neighbourPoints[core_points[i]].size() << endl;
     auto iter_1 = cloud_->begin() + i;
     auto iter_2 = neighbourPoints.begin() + i;
     auto iter_3 = neighbourDistance.begin() + i;
@@ -158,13 +161,19 @@ void DBSCAN::find_independent() {
   // while (!viewer.wasStopped()) {
   //   viewer.spinOnce();
   // }
+  end = clock();
+  double endtime = (double)(end - start) / CLOCKS_PER_SEC;
+  cout << "Total time:" << end << "  " << start << "  " << endtime << "s"
+       << endl;  // s为单位
   showCloud(result_cloud, origin_cloud_);
 }
 // int main() {
 //   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new
 //   pcl::PointCloud<pcl::PointXYZ>);
 
-//   pcl::io::loadPCDFile("filter_1.pcd", *cloud);
-//   DBSCAN gather(cloud, 0.011f, 50);
+//   pcl::io::loadPCDFile(
+//       "/home/gjx/orbslam/catkin_ws/src/ZJUBinPicking/pcd_files/filter_1.pcd",
+//       *cloud);
+//   DBSCAN gather(cloud, 0.010f, 40);  // 0.011
 //   gather.start_scan();
 // }

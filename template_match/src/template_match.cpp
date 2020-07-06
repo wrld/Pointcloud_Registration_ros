@@ -60,6 +60,12 @@ void template_match::init() {
   ros::param::get("~side_max", side_max);
   ros::param::get("~side_min", side_min);
   ros::param::get("~save_filter", save_filter);
+  ros::param::get("~min_sample_distance", min_sample_distance);
+  ros::param::get("~max_correspondence_distance", max_correspondence_distance);
+  ros::param::get("~nr_iterations", nr_iterations);
+  ros::param::get("~normal_radius_", normal_radius_);
+  ros::param::get("~feature_radius_", feature_radius_);
+
   if (simulation && vision_simulation) {
     bat_sub = nh.subscribe("/kinect2/hd/points", 1, &template_match::cloudCB,
                            this);  //接收点云
@@ -67,7 +73,7 @@ void template_match::init() {
     bat_sub = nh.subscribe("/camera/depth/points", 1, &template_match::cloudCB,
                            this);  //接收点云
   } else if (!simulation) {
-    bat_sub = nh.subscribe("/kinect2/hd/points", 1, &template_match::cloudCB,
+    bat_sub = nh.subscribe("/kinect2/sd/points", 1, &template_match::cloudCB,
                            this);  //接收点云
   }
 
@@ -144,7 +150,7 @@ void template_match::showCloud(pcl::PointCloud<PointT>::Ptr cloud1,
   viewer->createViewPort(0.5, 0.0, 1.0, 1.0, v2);
   viewer->addPointCloud<pcl::PointXYZ>(cloud2, "sample cloud2", v2);
   viewer->setBackgroundColor(0.3, 0.3, 0.3, v2);
-  // viewer->addCoordinateSystem(1.0);
+  viewer->addCoordinateSystem(1.0);
 
   viewer->initCameraParameters();
   while (!viewer->wasStopped()) {
@@ -239,7 +245,7 @@ void template_match::cloudCB(const sensor_msgs::PointCloud2 &input) {
 void template_match::dbscan_cluster(
     pcl::PointCloud<PointT>::Ptr cloud_,
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2) {
-  DBSCAN cluster(cloud_, 0.011f, 50);
+  DBSCAN cluster(cloud_, 0.010f, 40);  // 0.011f, 50
   cluster.start_scan();
   goals = cluster.result_cloud_;
   cout << goals.size() << endl;
@@ -247,8 +253,8 @@ void template_match::dbscan_cluster(
     cout << "The " << i << " cluster" << endl;
     cout << "PointCloud representing the Cluster: " << goals[i]->points.size()
          << " data points." << endl;
-
-    match(goals[i], cloud_2, model_pipe, 0);
+    start = clock();
+    match(goals[i], cloud_, model_pipe, 0);
     if (target_pos[i](0) <= side_min || target_pos[i](0) >= side_max) {
       height_map_side.insert(make_pair(i, target_pos[i](2)));
       ROS_ERROR("side object!!!!!");
@@ -437,7 +443,7 @@ void template_match::ndt_match(pcl::PointCloud<pcl::PointXYZ>::Ptr goal,
   // Setting maximum step size for More-Thuente line search.
   ndt.setStepSize(0.001);
   // Setting Resolution of NDT grid structure (VoxelGridCovariance).
-  ndt.setResolution(0.004);
+  ndt.setResolution(0.001);
 
   // Setting max number of registration iterations.
   ndt.setMaximumIterations(50);
@@ -476,18 +482,19 @@ void template_match::match(pcl::PointCloud<pcl::PointXYZ>::Ptr goal,
         new pcl::PointCloud<pcl::PointXYZ>);
     cloud = goal;
     // for (int i = 0; i < goals.size(); i++) {
-    FeatureCloud template_cloud;
+    FeatureCloud template_cloud(normal_radius_, feature_radius_);
     template_cloud.setInputCloud(model);
     object_templates.push_back(template_cloud);
     // Set the TemplateAlignment inputs
-    TemplateAlignment template_align;
+    TemplateAlignment template_align(
+        min_sample_distance, max_correspondence_distance, nr_iterations);
     for (size_t i = 0; i < object_templates.size(); ++i) {
       template_align.addTemplateCloud(object_templates[i]);
     }
     // cloud.push_back(goals[i]);
 
     // Assign to the target FeatureCloud
-    FeatureCloud target_cloud;
+    FeatureCloud target_cloud(normal_radius_, feature_radius_);
     target_cloud.setInputCloud(cloud);
     template_align.setTargetCloud(target_cloud);
 
@@ -613,7 +620,7 @@ void template_match::match(pcl::PointCloud<pcl::PointXYZ>::Ptr goal,
       viewer.createViewPort(0.5, 0.0, 1.0, 1.0, v2);
       viewer.addPointCloud<pcl::PointXYZ>(cloud_2, "samplecloud2", v2);
       viewer.setBackgroundColor(0.3, 0.3, 0.3, v2);
-      viewer.addCoordinateSystem(1.0);
+      // viewer.addCoordinateSystem(1.0);
 
       while (!viewer.wasStopped()) {  // Display the visualiser until 'q'key is
         // pressed
@@ -775,7 +782,7 @@ void template_match::box(pcl::PointCloud<PointT>::Ptr cloud) {
   pcl::visualization::PCLVisualizer::Ptr viewer(
       new pcl::visualization::PCLVisualizer("3D Viewer"));
   viewer->setBackgroundColor(0, 0, 0);
-  viewer->addCoordinateSystem(1.0);
+  // viewer->addCoordinateSystem(1.0);
   viewer->initCameraParameters();
   viewer->addPointCloud<pcl::PointXYZ>(cloud, "sample cloud");
   // 添加AABB包容盒

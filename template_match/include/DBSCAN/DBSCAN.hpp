@@ -6,6 +6,7 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <ctime>
 #include <iostream>
 #include <vector>
 using namespace pcl;
@@ -27,7 +28,8 @@ class DBSCAN {
   }
   double MinPts;
   double eps;
-  double MinbPts = 30;
+  double MinbPts = 20;
+  clock_t start, end;
   ~DBSCAN() {}
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_;
   pcl::PointCloud<pcl::PointXYZ>::Ptr origin_cloud_;
@@ -36,7 +38,8 @@ class DBSCAN {
   vector<int> core_points;
   vector<int> bound_points;
   vector<int> result_points;
-  int method_ = 1;
+  int method_ = 0;
+  int use_edge = 1;
   const int CORE_POINT = 0;
   const int BOUND_POINT = 1;
   const int NOISE_POINT = 2;

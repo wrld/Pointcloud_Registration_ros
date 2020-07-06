@@ -76,11 +76,14 @@ class FeatureCloud {
  public:
   // A bit of shorthand
 
+  FeatureCloud(double normal_radius, double feature_radius)
+      : search_method_xyz_(new SearchMethod),
+        normal_radius_(normal_radius),
+        feature_radius_(feature_radius) {}
   FeatureCloud()
       : search_method_xyz_(new SearchMethod),
-        normal_radius_(0.05f),
-        feature_radius_(0.05f) {}
-
+        normal_radius_(0.01f),
+        feature_radius_(0.01f) {}
   ~FeatureCloud() {}
 
   // Process the given cloud
@@ -158,10 +161,12 @@ class TemplateAlignment {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
 
-  TemplateAlignment()
-      : min_sample_distance_(0.002f),               // 0.005f 0.002
-        max_correspondence_distance_(0.1f * 0.1f),  // 0.1f * 0.1f 0.1*0.1
-        nr_iterations_(1500) {                      // 1000 2000
+  TemplateAlignment(float min_sample_distance,
+                    double max_correspondence_distance, double nr_iterations)
+      : min_sample_distance_(min_sample_distance),  // 0.005f 0.002
+        max_correspondence_distance_(
+            max_correspondence_distance),  // 0.1f * 0.1f 0.1*0.1
+        nr_iterations_(nr_iterations) {    // 1000 2000
     // Initialize the parameters in the Sample Consensus Initial Alignment
     // (SAC-IA) algorithm
     sac_ia_.setMinSampleDistance(min_sample_distance_);
@@ -247,9 +252,10 @@ class TemplateAlignment {
 class template_match {
  public:
   double min_x, min_y, min_z, max_x, max_y, max_z;
-  double model_size, voxel_grid_size;
+  double model_size, voxel_grid_size, normal_radius_, feature_radius_;
   int object_index = 0;
   double theta, dx, dy, dz, side_min, side_max;
+  double min_sample_distance, max_correspondence_distance, nr_iterations;
   int arm_state;
   int max_num, min_num;
   int object_num = 0;
